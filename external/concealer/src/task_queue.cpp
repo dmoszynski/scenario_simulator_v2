@@ -20,7 +20,7 @@
 namespace concealer
 {
 TaskQueue::TaskQueue()
-: dispatcher([this] {
+: finalized{false}, dispatcher([this] {
     try {
       while (rclcpp::ok() and not finalized.load(std::memory_order_acquire)) {
         if (not empty()) {
@@ -33,6 +33,14 @@ TaskQueue::TaskQueue()
       }
     } catch (...) {
       thrown = std::current_exception();
+    }
+    std::cerr << "[WARN][DEBUG/concealer::FieldOperatorApplication::TaskQueue] TaskQueue dispatcher thread ended" << std::endl;
+    std::cerr << "[WARN][DEBUG/concealer::FieldOperatorApplication::TaskQueue] Final rclcpp::ok() = " << (rclcpp::ok() ? "true" : "false") << std::endl;
+    std::cerr << "[WARN][DEBUG/concealer::FieldOperatorApplication::TaskQueue] Final finalized = " << (finalized.load(std::memory_order_acquire) ? "true" : "false") << std::endl;
+    if (rclcpp::ok()) {
+      RCLCPP_WARN(rclcpp::get_logger("DEBUG/concealer::FieldOperatorApplication::TaskQueue"), "TaskQueue dispatcher thread ended");
+      RCLCPP_WARN(rclcpp::get_logger("DEBUG/concealer::FieldOperatorApplication::TaskQueue"), "Final rclcpp::ok() = %s", rclcpp::ok() ? "true" : "false");
+      RCLCPP_WARN(rclcpp::get_logger("DEBUG/concealer::FieldOperatorApplication::TaskQueue"), "Final finalized = %s", finalized.load(std::memory_order_acquire) ? "true" : "false");
     }
   })
 {
